@@ -1,8 +1,12 @@
 *=$0801 "Basic Program"
 	BasicUpstart($0810)
 
-	*=$1000		//music at $1000	to $5E23 - rules out VIC banks 0 and 1
+	/*
+    *=$1000		//music at $1000	to $5E23 - rules out VIC banks 0 and 1
 	.import binary "coldprocess.sid",$7c+2
+    */
+
+    .var music = LoadSid("coldprocess.sid")
 
 	//Advanced art studio file specs:
 	//Load address: $a000 - $c71F
@@ -28,8 +32,8 @@
 	lda #$35
 	sta $01
 
-	lda #$00	//select subtune
-	jsr $1000	//init music
+	lda #music.startSong-1
+    jsr music.init
 
 	//-------------------------
 	//-- DISPLAY PIC ATTEMPT --
@@ -97,11 +101,75 @@ setpic:
 	lda #$18
  	sta $d018
 
+    //set up irq
+    sei
+
+    // here we shift BASIC and Kernal ROM routines out the way
+	// so we can use the RAM space at the addresses they used.
+	lda #$35
+	sta $01
+
+
+	lda #<irq
+	sta $0314
+	lda #>irq
+	sta $0315
+	
+	asl $d019
+
+	lda #$7b
+	sta $dc0d
+
+	lda #$81
+	sta $d01a
+
+	lda #$3b
+	sta $d011
+
+	lda #$18
+	sta $d016
+
+	lda #$3A
+	sta $d012
+
+	cli
+	jmp *
+
+
+irq:
+	
+	//preserve registers
+	pha		// store register a in stack
+	txa
+	pha		// store register x in stack
+	tya
+	pha		//store register y in stack
+
+	inc $d020	//bg color
+	jsr music.play	//music play 
+	dec $d020	//bg color
+	
+	pla
+	tay		//restore register y
+	pla
+	tax		//restore register x
+	pla		//restore register a
+
+    lda #$ff
+	sta $d019	//acknowledge interrupt
+	jmp $ea31	//original irq pointer, just in case
+	rti
+
+/*
 loop:
-	lda #$3A	//wait for the raster beam to reach line #$3f
+	lda #$3A	//wait for the raster beam to reach line #$3a
 	cmp $d012
 	bne *-3
 
 	jsr $1003	//play the music
 
 	jmp loop	//jump to loop
+*/
+
+*=music.location "Music"
+.fill music.size, music.getData(i)
