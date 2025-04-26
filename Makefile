@@ -6,7 +6,7 @@ EXOMIZER=D:/Dropbox/C64\ Stuff/Windows/exo/win32/exomizer
 CC1541=D:/Dropbox/C64\ Stuff/Windows/cc1541
 EXOMIZERFLAGS=sfx basic -n
 VICE=D:/WinVICE-3.1-x64/x64sc
-VICEFLAGS=-keybuf "\88"
+VICEFLAGS=
 SOURCES=$(wildcard *.asm)
 OBJECTS=$(SOURCES:.asm=.prg)
 
